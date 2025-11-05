@@ -1,0 +1,12 @@
+{
+  "extends": ["@commitlint/config-conventional"],
+  "rules": {
+    "type-enum": [
+      2,
+      "always",
+      ["feat", "update", "refact", "fix", "hotfix"]
+    ],
+    "subject-case": [0]
+  },
+  "_comment": "커밋 메시지 형식을 정의합니다. feature(기능 개발), update(기능 수정), refactor(구조 수정), fix(버그 수정), hotfix(긴급 버그 수정)"
+}

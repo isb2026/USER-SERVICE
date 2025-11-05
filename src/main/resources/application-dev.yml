@@ -1,0 +1,131 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /user
+  error:
+    include-message: always
+    whitelabel:
+      enabled: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+  health:
+    redis:
+      enabled: false
+
+spring:
+  application:
+    name: user
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:mysql://prod.mariadb.primes-cloud.co.kr:3306/msa_mes_db?useSSL=false&zeroDateTimeBehavior=convertToNull&autoReconnect=true&characterEncoding=UTF-8&characterSetResults=UTF-8
+    username: root
+    password: anfmsah12#
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MariaDBDialect
+        format_sql: true
+
+  data:
+    redis:
+      host: redis-service.primes
+      port: 6379
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 2
+          max-wait: 5000ms
+        shutdown-timeout: 100ms
+      connect-timeout: 10000ms
+      client-type: lettuce
+
+  kafka:
+    autoStartup: true
+    consumer:
+      bootstrap-servers: >
+        kafka-controller-0.kafka-controller-headless.msa.svc.cluster.local:9092,
+        kafka-controller-1.kafka-controller-headless.msa.svc.cluster.local:9092,
+        kafka-controller-2.kafka-controller-headless.msa.svc.cluster.local:9092
+      group-id: init-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      bootstrap-servers: >
+        kafka-controller-0.kafka-controller-headless.msa.svc.cluster.local:9092,
+        kafka-controller-1.kafka-controller-headless.msa.svc.cluster.local:9092,
+        kafka-controller-2.kafka-controller-headless.msa.svc.cluster.local:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss # 날짜/시간 포맷
+    time-zone: Asia/Seoul
+
+logging:
+  level:
+    org.springdoc: DEBUG
+    org.springframework.data.redis: DEBUG
+    io.lettuce.core: DEBUG
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui
+
+# 라이브러리 설정
+jpa:
+  enabled: true
+
+kafka:
+  enabled: true
+
+jackson:
+  enabled: true
+
+tenant:
+  enabled: true
+  default-id: "10001"
+
+querydsl:
+  enabled: true
+
+primes:
+  library:
+    enabled: true
+
+# 토큰 저장소 설정
+app:
+  token-storage:
+    type: fallback  # fallback, database 중 선택
+
+# Snowflake ID 생성기 설정
+snowflake:
+  worker-id: 1
+  datacenter-id: 1

@@ -1,0 +1,137 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.1'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
+}
+
+group = 'com.lts5'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+bootJar {
+	archiveFileName = 'app.jar'
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	// 로컬 Maven 저장소 (개발용 - 최우선)
+	mavenLocal()
+
+	// GitHub Packages - Primes Spring Library
+	maven {
+		name = "GitHubPackages"
+		url = uri("https://maven.pkg.github.com/moornmo-team/Primes-Spring-Library")
+		credentials {
+			username = System.getenv("USERNAME") ?: project.findProperty("gpr.user")
+			password = System.getenv("GITHUB_PACKAGES_TOKEN") ?: project.findProperty("gpr.key")
+		}
+		// Primes Spring Library만 이 저장소에서 찾기
+		content {
+			includeGroup "com.primes"
+		}
+		// 디버깅을 위한 로깅 활성화
+		allowInsecureProtocol = false
+	}
+
+	mavenCentral()
+	maven {
+		url "https://repo.spring.io/release"
+		// Primes Spring Library는 이 저장소에서 제외
+		content {
+			excludeGroup "com.primes"
+		}
+	}
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.kafka:spring-kafka'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'com.h2database:h2'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	implementation 'mysql:mysql-connector-java:8.0.33'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+	implementation("com.querydsl:querydsl-jpa:5.0.0:jakarta")
+	annotationProcessor("com.querydsl:querydsl-apt:5.0.0:jakarta")
+	annotationProcessor("jakarta.persistence:jakarta.persistence-api")
+	annotationProcessor("jakarta.annotation:jakarta.annotation-api")
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2'
+
+	// Primes Spring Library from Maven Repository
+	implementation 'com.primes:primes-spring-library:v0.4.4'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+	finalizedBy jacocoTestReport
+	
+	// Controller 테스트만 실행
+	include '**/controller/**'
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+		html.required = true
+		csv.required = false
+	}
+	
+	// Controller 패키지만 커버리지 측정
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, include: [
+				'com/lts5/user/controller/**'
+			])
+		}))
+	}
+}
+
+jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			limit {
+				counter = 'LINE'
+				value = 'COVEREDRATIO'
+				minimum = 1.0
+			}
+		}
+		rule {
+			limit {
+				counter = 'BRANCH'
+				value = 'COVEREDRATIO'
+				minimum = 1.0
+			}
+		}
+	}
+	
+	// Controller 패키지만 검증
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, include: [
+				'com/lts5/user/controller/**'
+			])
+		}))
+	}
+}
